@@ -6,7 +6,7 @@
 cantante(megurineLuka,cancion(nightFever,4)).
 cantante(megurineLuka,cancion(foreverYoung,5)).
 
-cantante(hastuneMiku,cancion(tellYourWorld,5)).
+cantante(hatsuneMiku,cancion(tellYourWorld,5)).
 
 
 cantante(gumi,cancion(foreverYoung,4)).
@@ -28,9 +28,10 @@ sabeAlMenosDosCanciones(Cantante):-
     Cancion \= OtraCancion.
 
 tiempoTotalMenorA15(Cantante):-
-    cantante(Cantante,cancion(Cantante,Duracion)),
-    forall(cantante(Cantante,cancion(Cancion,Duracion)),cantante(Cantante,cancion(Cancion,Duracion))), Duracion < 15.
-
+    findall(Duracion, cantante(Cantante,cancion(_,Duracion)), ListaDeDuraciones),
+    sumlist(ListaDeDuraciones, DuracionTotal),
+    DuracionTotal < 15.
+    
 % 2. Hay algunos vocaloids que simplemente no quieren cantar canciones largas porque no les gusta, es por eso que se pide saber si un cantante es acelerado, condición que se da cuando todas sus canciones duran 4 minutos o menos. Resolver sin usar forall/2.
 
-% s(Cantante):-
+ s(Cantante):-
