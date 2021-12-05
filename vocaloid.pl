@@ -21,47 +21,119 @@ cantante(flojoYMuchosTemas,cancion(wasup,3)).
 
 % 1. Para comenzar el concierto, es preferible introducir primero a los cantantes más novedosos, por lo que necesitamos un predicado para saber si un vocaloid es novedoso cuando saben al menos 2 canciones y el tiempo total que duran todas las canciones debería ser menor a 15.
 
-esNovedoso(Cantante):-
-    cantante(Cantante,_),
+novedoso(Cantante) :- 
     sabeAlMenosDosCanciones(Cantante),
-    tiempoTotalMenorA15(Cantante).
-
-sabeAlMenosDosCanciones(Cantante):-
-    cantante(Cantante,cancion(Cancion,_)),
-    cantante(Cantante,cancion(OtraCancion,_)),
-    Cancion \= OtraCancion.
-
-tiempoTotalMenorA15(Cantante):-
-    findall(Duracion, cantante(Cantante,cancion(_,Duracion)), ListaDeDuraciones),
-    sumlist(ListaDeDuraciones, DuracionTotal),
-    DuracionTotal < 15.
+    tiempoTotalCanciones(Cantante, Tiempo),
+    Tiempo < 15.
     
+sabeAlMenosDosCanciones(Cantante) :-
+    cantante(Cantante, UnaCancion),
+    cantante(Cantante, OtraCancion),
+    UnaCancion \= OtraCancion.
+
+tiempoTotalCanciones(Cantante, TiempoTotal) :-
+    findall(TiempoCancion, 
+    tiempoDeCancion(Cantante, TiempoCancion), Tiempos), sumlist(Tiempos,TiempoTotal).
+    
+tiempoDeCancion(Cantante,TiempoCancion):-  
+    cantante(Cantante,Cancion),
+    tiempo(Cancion,TiempoCancion).
+    
+tiempo(cancion(_, Tiempo), Tiempo).
+    
+
 % 2. Hay algunos vocaloids que simplemente no quieren cantar canciones largas porque no les gusta, es por eso que se pide saber si un cantante es acelerado, condición que se da cuando todas sus canciones duran 4 minutos o menos. Resolver sin usar forall/2.
 
-esAcelerado(Cantante):-
-    cantante(Cantante,_),
-    not(dura4OMas(Cantante)).
-
-dura4OMas(Cantante):-
-    cantante(Cantante,cancion(_,Duracion)),
-    not(Duracion =< 4).
+acelerado(Cantante):-
+    vocaloid(Cantante),
+    not((tiempoDeCancion(Cantante,Tiempo),Tiempo > 4)).
+vocaloid(Cantante):-
+    cantante(Cantante,_).
 
 %%%%%%%%%%CONCIERTOS%%%%%%%% 
 
-% Además de los vocaloids, conocemos información acerca de varios conciertos que se darán en un futuro no muy lejano. De cada concierto se sabe su nombre, el país donde se realizará, una cantidad de fama y el tipo de concierto.
-
-%concierto(Nombre,Pais,CantFama,tipo(_)).
-
-% Hay tres tipos de conciertos:
-%-  gigante del cual se sabe la cantidad mínima de canciones que el cantante tiene que saber y además la duración total de todas las canciones tiene que ser mayor a una cantidad dada.
-
-% concierto(_,_,_,gigante(cantCanciones,Tiempo)).
-
-%-  mediano sólo pide que la duración total de las canciones del cantante sea menor a una 	cantidad determinada.
-%-  pequeño el único requisito es que alguna de las canciones dure más de una cantidad dada.
-
+% 1)
 concierto(mikuExpo,estadosUnidos,2000,gigante(2,6)).
 concierto(magicalMirai,japon,3000,gigante(3,10)).
 concierto(vocalektVision,estadosUnidos,1000,mediano(9)).
-concierto(mikuFest,argnetina,100,pequenio(any)).
+concierto(mikuFest,argentina,100,diminuto(4)).
 
+
+% 2)
+puedeParticipar(hastuneMiku,Concierto):-
+    concierto(Concierto,_,_,_).
+
+puedeParticipar(Cantante,Concierto):-
+    vocaloid(Cantante),
+    Cantante \= hastuneMiku,
+    concierto(Concierto,_,_,Requisitos),
+    cumpleRequsitos(Cantante,Requisitos).
+
+cumpleRequsitos(Cantante,gigante(CantCanciones,TiempoMinimo)):-
+    cantidadCanciones(Cantante,Cantidad),
+    Cantidad >= CantCanciones,
+    tiempoTotalCanciones(Cantante,Total),
+    Total > TiempoMinimo.
+
+cumpleRequsitos(Cantante,mediano(TiempoMaximo)):-
+    tiempoTotalCanciones(Cantante,Total),
+    Total < TiempoMaximo.
+
+cumpleRequisitos(Cantante, diminuto(TiempoMinimo)):-
+	cantante(Cantante, Cancion),
+	tiempo(Cancion, Tiempo),
+	Tiempo > TiempoMinimo.
+
+cantidadCanciones(Cantante, Cantidad) :- 
+    findall(Cancion, cantante(Cantante, Cancion), Canciones),
+    length(Canciones, Cantidad).
+
+% 3)
+masFamoso(Cantante):-
+    nivelFamoso(Cantante, NivelMasFamoso),
+    forall(nivelFamoso(_,Nivel), NivelMasFamoso >= Nivel).
+
+nivelFamoso(Cantante, Nivel):- 
+    famaTotal(Cantante, FamaTotal), 	cantidadCanciones(Cantante, Cantidad), 
+    Nivel is FamaTotal * Cantidad.
+    
+    famaTotal(Cantante, FamaTotal):- 
+    vocaloid(Cantante),
+    findall(Fama, famaConcierto(Cantante, Fama),  
+    CantidadesFama), 	
+    sumlist(CantidadesFama, FamaTotal).
+    
+    famaConcierto(Cantante, Fama):-
+    puedeParticipar(Cantante,Concierto),
+    fama(Concierto, Fama).
+    
+    fama(Concierto,Fama):- 
+    concierto(Concierto,_,Fama,_).
+
+% 4)
+
+conoce(megurineLuka,hastuneMiku).
+conoce(megurineLuka,gumi).
+conoce(gumi,seeU).
+conoce(seeU,kaito).
+
+unicoParticipanteEntreConocidos(Cantante,Concierto):- 
+    puedeParticipar(Cantante, Concierto),
+	not((conocido(Cantante, OtroCantante), 
+    puedeParticipar(OtroCantante, Concierto))).
+
+%Conocido directo
+conocido(Cantante, OtroCantante) :- 
+conoce(Cantante, OtroCantante).
+
+%Conocido indirecto
+conocido(Cantante, OtroCantante) :- 
+conoce(Cantante, UnCantante), 
+conocido(UnCantante, OtroCantante).
+
+
+
+% 5)
+% En la solución planteada habría que agregar una claúsula en el predicado cumpleRequisitos/2  que tenga en cuenta el nuevo functor con sus respectivos requisitos 
+
+% El concepto que facilita los cambios para el nuevo requerimiento es el polimorfismo, que nos permite dar un tratamiento en particular a cada uno de los conciertos en la cabeza de la cláusula.
