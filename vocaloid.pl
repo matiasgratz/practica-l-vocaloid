@@ -44,5 +44,24 @@ esAcelerado(Cantante):-
 
 dura4OMas(Cantante):-
     cantante(Cantante,cancion(_,Duracion)),
-    not(Duracion >= 4).
+    not(Duracion =< 4).
+
+%%%%%%%%%%CONCIERTOS%%%%%%%% 
+
+% Además de los vocaloids, conocemos información acerca de varios conciertos que se darán en un futuro no muy lejano. De cada concierto se sabe su nombre, el país donde se realizará, una cantidad de fama y el tipo de concierto.
+
+%concierto(Nombre,Pais,CantFama,tipo(_)).
+
+% Hay tres tipos de conciertos:
+%-  gigante del cual se sabe la cantidad mínima de canciones que el cantante tiene que saber y además la duración total de todas las canciones tiene que ser mayor a una cantidad dada.
+
+% concierto(_,_,_,gigante(cantCanciones,Tiempo)).
+
+%-  mediano sólo pide que la duración total de las canciones del cantante sea menor a una 	cantidad determinada.
+%-  pequeño el único requisito es que alguna de las canciones dure más de una cantidad dada.
+
+concierto(mikuExpo,estadosUnidos,2000,gigante(2,6)).
+concierto(magicalMirai,japon,3000,gigante(3,10)).
+concierto(vocalektVision,estadosUnidos,1000,mediano(9)).
+concierto(mikuFest,argnetina,100,pequenio(any)).
 
